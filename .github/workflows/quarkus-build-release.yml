@@ -78,7 +78,10 @@ jobs:
       - name: Run build
         run: |
           mvn clean package -P${{ inputs.profile_maven }}
-
+      - name: Set lowercase image name
+        id: image_name_lower
+        run: |
+          echo "name=$(echo '${{ inputs.image_registry }}/${{ inputs.image_name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
       - name: Log in to Image Container Registry
         uses: docker/login-action@v3
         with:
@@ -92,8 +95,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ inputs.image_registry }}/${{ inputs.image_name }}-${{ inputs.profile_maven }}:${{ inputs.image_tag }}
-            ${{ inputs.image_registry }}/${{ inputs.image_name }}-${{ inputs.profile_maven }}:latest
+            ${{ steps.image_name_lower.outputs.name }}-${{ inputs.profile_maven }}:${{ inputs.image_tag }}
+            ${{ steps.image_name_lower.outputs.name }}-${{ inputs.profile_maven }}:latest
           file: ${{ inputs.dockerfile_path }}
           build-args: ${{ inputs.docker_build_arguments }}
 
@@ -109,8 +112,8 @@ jobs:
             ## Changes in this Release
             
             ### Docker Images
-            - Container Image: `${{ inputs.image_registry }}/${{ inputs.image_name }}-${{ inputs.profile_maven }}:${{ inputs.image_tag }}`
-            - Container Image: `${{ inputs.image_registry }}/${{ inputs.image_name }}-${{ inputs.profile_maven }}:latest`
+            - Container Image: `${{ steps.image_name_lower.outputs.name }}-${{ inputs.profile_maven }}:${{ inputs.image_tag }}`
+            - Container Image: `${{ steps.image_name_lower.outputs.name }}-${{ inputs.profile_maven }}:latest`
 
             ### Artifacts
             - JAR artifact is attached to this release
