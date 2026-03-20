@@ -64,6 +64,11 @@ jobs:
           ARTIFACT_VERSION=$(node -p "require('./package.json').version")
           echo "final_name=$ARTIFACT_NAME-$ARTIFACT_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Set lowercase image name
+        id: image_name_lower
+        run: |
+          echo "name=$(echo '${{ inputs.image_registry }}/${{ inputs.image_name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Install Dependencies
         run: npm ci
 
@@ -88,8 +93,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ inputs.image_registry }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
-            ${{ inputs.image_registry }}/${{ inputs.image_name }}:latest
+            ${{ steps.image_name_lower.outputs.name }}:${{ inputs.image_tag }}
+            ${{ steps.image_name_lower.outputs.name }}:latest
           file: ${{ inputs.dockerfile_path }}
           build-args: ${{ inputs.docker_build_arguments }}
 
@@ -102,7 +107,7 @@ jobs:
             ## Changes in this Release
 
             ### Docker Images
-            - Container Image Registry: `${{ inputs.image_registry }}/${{ inputs.image_name }}:${{ inputs.image_tag }}`
+            - Container Image Registry: `${{ steps.image_name_lower.outputs.name }}:${{ inputs.image_tag }}`
 
             ### Artifacts
             - Artifact is attached to this release
